@@ -1,9 +1,284 @@
 <!DOCTYPE html>
 <html lang="es">
-	<head>
-		<meta charset="UTF-8">
-		<title>Cálculo de Grado de Electrificación</title>
-	</head>
-	<body>
-	</body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grado de Electrificación y Circuitos — Viviendas</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            max-width: 700px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            background-color: #f5f5f5;
+        }
+        .contenedor {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            font-size: 1.4rem;
+            margin-top: 0;
+        }
+        h2 {
+            color: #34495e;
+            font-size: 1.1rem;
+            margin: 1.5rem 0 0.5rem;
+        }
+        .entrada {
+            margin: 1.5rem 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 0.9rem;
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1f618d;
+        }
+        .resultado {
+            margin-top: 1.5rem;
+            padding: 1.2rem;
+            border-radius: 5px;
+            background-color: #e8f4f8;
+            display: none;
+        }
+        .error {
+            color: #c0392b;
+            margin-top: 0.5rem;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 0.8rem 0 1.2rem;
+            font-size: 0.9rem;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 0.6rem;
+            text-align: center;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .resaltado {
+            background-color: #d4edfc;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="contenedor">
+        <h1>Tablas 771.8 — Instalaciones Eléctricas en Viviendas</h1>
+        
+        <div class="entrada">
+            <label for="metros">Superficie de la vivienda (m²):</label>
+            <input type="number" id="metros" placeholder="Ej: 90" min="1" step="1">
+        </div>
+
+        <button onclick="calcular()">Calcular</button>
+        <div id="mensajeError" class="error"></div>
+
+        <div id="resultado" class="resultado">
+            <h3>✅ Resultado:</h3>
+            <p><strong>Superficie:</strong> <span id="sup"></span> m²</p>
+            <p><strong>Grado de Electrificación:</strong> <span id="grado"></span></p>
+            <p><strong>Demanda de Potencia Máxima Simultánea:</strong> <span id="potencia"></span></p>
+
+            <h3>🔌 Mínimo de Circuitos:</h3>
+            <table id="tablaCircuitos">
+                <thead>
+                    <tr>
+                        <th>Grado</th>
+                        <th>Iluminación<br>Uso General</th>
+                        <th>Tomacorriente<br>Uso General</th>
+                        <th>Iluminación<br>Uso Especial</th>
+                        <th>Tomacorriente<br>Uso Especial</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoTabla"></tbody>
+            </table>
+        </div>
+
+        <h2>📋 Tabla 771.8.I — Grado de Electrificación</h2>
+        <table>
+            <tr>
+                <th>Grado</th>
+                <th>Superficie</th>
+                <th>Potencia</th>
+            </tr>
+            <tr>
+                <td>Mínimo</td>
+                <td>hasta 60 m²</td>
+                <td>hasta 3,7 kVA</td>
+            </tr>
+            <tr>
+                <td>Medio</td>
+                <td>61 a 130 m²</td>
+                <td>hasta 7 kVA</td>
+            </tr>
+            <tr>
+                <td>Elevado</td>
+                <td>131 a 200 m²</td>
+                <td>hasta 11 kVA</td>
+            </tr>
+            <tr>
+                <td>Superior</td>
+                <td>más de 200 m²</td>
+                <td>más de 11 kVA</td>
+            </tr>
+        </table>
+
+        <h2>📋 Tabla 771.8.II — Mínimo de Circuitos</h2>
+        <table>
+            <tr>
+                <th>Grado</th>
+                <th>Iluminación<br>General</th>
+                <th>Tomacorriente<br>General</th>
+                <th>Iluminación<br>Especial</th>
+                <th>Tomacorriente<br>Especial</th>
+            </tr>
+            <tr>
+                <td>Mínimo</td>
+                <td>1</td>
+                <td>2</td>
+                <td>—</td>
+                <td>—</td>
+            </tr>
+            <tr>
+                <td>Medio</td>
+                <td>2</td>
+                <td>3</td>
+                <td>1</td>
+                <td>1</td>
+            </tr>
+            <tr>
+                <td>Elevado</td>
+                <td>2</td>
+                <td>4</td>
+                <td>1</td>
+                <td>2</td>
+            </tr>
+            <tr>
+                <td>Superior</td>
+                <td>3</td>
+                <td>5</td>
+                <td>2</td>
+                <td>2</td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        // Datos según norma
+        const datos = [
+            {
+                grado: "Mínimo",
+                limite: 60,
+                potencia: "hasta 3,7 kVA",
+                ilumGen: 1,
+                tomaGen: 2,
+                ilumEsp: "—",
+                tomaEsp: "—"
+            },
+            {
+                grado: "Medio",
+                limite: 130,
+                potencia: "hasta 7 kVA",
+                ilumGen: 2,
+                tomaGen: 3,
+                ilumEsp: 1,
+                tomaEsp: 1
+            },
+            {
+                grado: "Elevado",
+                limite: 200,
+                potencia: "hasta 11 kVA",
+                ilumGen: 2,
+                tomaGen: 4,
+                ilumEsp: 1,
+                tomaEsp: 2
+            },
+            {
+                grado: "Superior",
+                limite: Infinity,
+                potencia: "más de 11 kVA",
+                ilumGen: 3,
+                tomaGen: 5,
+                ilumEsp: 2,
+                tomaEsp: 2
+            }
+        ];
+
+        function calcular() {
+            const metros = parseFloat(document.getElementById('metros').value);
+            const cajaResultado = document.getElementById('resultado');
+            const cajaError = document.getElementById('mensajeError');
+            
+            cajaResultado.style.display = 'none';
+            cajaError.textContent = '';
+
+            if (isNaN(metros) || metros <= 0) {
+                cajaError.textContent = '⚠️ Por favor, ingresá un número válido mayor a 0';
+                return;
+            }
+
+            // Determinar categoría
+            let cat = datos.find(d => metros <= d.limite);
+
+            // Mostrar datos principales
+            document.getElementById('sup').textContent = metros;
+            document.getElementById('grado').textContent = cat.grado;
+            document.getElementById('potencia').textContent = cat.potencia;
+
+            // Llenar tabla de circuitos resaltando el correspondiente
+            const cuerpo = document.getElementById('cuerpoTabla');
+            cuerpo.innerHTML = '';
+            datos.forEach(fila => {
+                const resaltar = fila.grado === cat.grado ? 'class="resaltado"' : '';
+                cuerpo.innerHTML += `
+                    <tr ${resaltar}>
+                        <td>${fila.grado}</td>
+                        <td>${fila.ilumGen}</td>
+                        <td>${fila.tomaGen}</td>
+                        <td>${fila.ilumEsp}</td>
+                        <td>${fila.tomaEsp}</td>
+                    </tr>
+                `;
+            });
+
+            cajaResultado.style.display = 'block';
+        }
+
+        // Calcular con Enter
+        document.getElementById('metros').addEventListener('keypress', e => {
+            if (e.key === 'Enter') calcular();
+        });
+    </script>
+</body>
 </html>
